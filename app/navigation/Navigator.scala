@@ -27,7 +27,7 @@ import pages.sections.vehicledetails.{AddImportVehicleDetailsPage, AddVehicleDet
 import pages.sections.notifieraddress.IsYourAddressInTheUkPage
 import pages.sections.purchaseraddress.IsPurchaserAddressInTheUkPage
 import pages.sections.purchaserdetails.{PurchaserBusinessNamePage, PurchaserNamePage}
-import pages.sections.supplierdetails.{IsSupplierVatRegisteredPage, SupplierBusinessNamePage, SupplierBusinessOrIndividualPage, SupplierNamePage, SupplierNumberPage, UsePersonalDetailsAsSupplierPage}
+import pages.sections.supplierdetails.{IsSupplierVatRegisteredPage, SupplierBusinessNamePage, SupplierBusinessOrIndividualPage, SupplierNamePage, SupplierNumberPage, UsePersonalDetailsAsSupplierPage, UsePurchaserDetailsAsSupplierPage}
 import pages.sections.supplieraddress.IsSupplierAddressInTheUkPage
 import pages.sections.vehicledetails.VehicleDatesPage
 
@@ -86,9 +86,17 @@ class Navigator @Inject() () {
     case PurchaserBusinessOrIndividualPage =>
       (_, _) => initialquestions.routes.InitialQuestionsCheckYourAnswersController.onPageLoad()
     case AddVehicleDetailsPage =>
-      (userAnswers, _) =>
+      (userAnswers, userType) =>
         userAnswers.get(AddVehicleDetailsPage) match {
-          case Some(AddVehicleDetails.BySupplier)    => supplierdetails.routes.UsePersonalDetailsAsSupplierController.onPageLoad(NormalMode)
+          case Some(AddVehicleDetails.BySupplier) =>
+            val isAgentWithoutClient = userType == NovaUserType.Agent && userAnswers.get(AgentSelectedClientPage).isEmpty
+            val boughtOnBehalf       = userAnswers.get(PurchaserOrOnBehalfPage).contains(PurchaserOrOnBehalf.OnBehalfOfPurchaser)
+            val isVatRegisteredOrg   = userType == NovaUserType.VatRegisteredOrganisation
+            if (!isVatRegisteredOrg && (boughtOnBehalf || isAgentWithoutClient))
+              supplierdetails.routes.UsePurchaserDetailsAsSupplierController
+                .onPageLoad(SupplierNumber(userAnswers.get(SupplierNumberPage).getOrElse(1)), NormalMode)
+            else
+              supplierdetails.routes.UsePersonalDetailsAsSupplierController.onPageLoad(NormalMode)
           case Some(AddVehicleDetails.BySpreadsheet) =>
             routes.LandingPageController.onPageLoad() // TODO: navigate to spreadsheet upload flow when built
           case _ => routes.JourneyRecoveryController.onPageLoad()
@@ -106,6 +114,15 @@ class Navigator @Inject() () {
     case UsePersonalDetailsAsSupplierPage =>
       (userAnswers, _) =>
         userAnswers.get(UsePersonalDetailsAsSupplierPage) match {
+          case Some(true)  => routes.LandingPageController.onPageLoad() // TODO: navigate to CYA3.0 when built
+          case Some(false) =>
+            supplierdetails.routes.SupplierBusinessOrIndividualController
+              .onPageLoad(SupplierNumber(userAnswers.get(SupplierNumberPage).getOrElse(1)), NormalMode)
+          case _ => routes.JourneyRecoveryController.onPageLoad()
+        }
+    case UsePurchaserDetailsAsSupplierPage =>
+      (userAnswers, _) =>
+        userAnswers.get(UsePurchaserDetailsAsSupplierPage) match {
           case Some(true)  => routes.LandingPageController.onPageLoad() // TODO: navigate to CYA3.0 when built
           case Some(false) =>
             supplierdetails.routes.SupplierBusinessOrIndividualController
