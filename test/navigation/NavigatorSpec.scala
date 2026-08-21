@@ -24,7 +24,7 @@ import pages.sections.initialquestions.{AgentClientVehicleBusinessUsePage, Busin
 import pages.sections.notifierdetails.{AboutYourDetailsPage, BusinessNamePage, EmailAddressPage, NameDetailsPage, PhoneNumberPage}
 import pages.sections.vehicledetails.AddVehicleDetailsPage
 import pages.sections.purchaserdetails.{PurchaserBusinessNamePage, PurchaserNamePage}
-import pages.sections.supplierdetails.{IsSupplierVatRegisteredPage, SupplierBusinessNamePage, SupplierBusinessOrIndividualPage, SupplierNamePage, SupplierNumberPage, UsePersonalDetailsAsSupplierPage}
+import pages.sections.supplierdetails.{IsSupplierVatRegisteredPage, SupplierBusinessNamePage, SupplierBusinessOrIndividualPage, SupplierNamePage, UsePersonalDetailsAsSupplierPage}
 import pages.sections.purchaseraddress.IsPurchaserAddressInTheUkPage
 
 class NavigatorSpec extends SpecBase {
@@ -318,16 +318,6 @@ class NavigatorSpec extends SpecBase {
           .onPageLoad()
       }
 
-      "must go from AddVehicleDetailsPage AVD1.0 to UsePersonalDetailsAsSupplier AVD-S1.0 when BySupplier is selected" in {
-        val ua = userAnswers.set(AddVehicleDetailsPage, AddVehicleDetails.BySupplier).success.value
-        navigator.nextPage(
-          AddVehicleDetailsPage,
-          NormalMode,
-          ua,
-          NovaUserType.VatRegisteredOrganisation
-        ) mustBe supplierdetails.routes.UsePersonalDetailsAsSupplierController.onPageLoad(NormalMode)
-      }
-
       "must go from AddVehicleDetailsPage AVD1.0 to LandingPage when BySpreadsheet is selected" in {
         // TODO: navigate to spreadsheet upload flow when implemented
         val ua = userAnswers.set(AddVehicleDetailsPage, AddVehicleDetails.BySpreadsheet).success.value
@@ -350,9 +340,9 @@ class NavigatorSpec extends SpecBase {
 
       "must go from UsePersonalDetailsAsSupplierPage AVD-S1.0 to LandingPage when Yes is selected" in {
         // TODO: navigate to CYA3.0 when implemented
-        val ua = userAnswers.set(UsePersonalDetailsAsSupplierPage, true).success.value
+        val ua = userAnswers.set(UsePersonalDetailsAsSupplierPage(SupplierNumber(1)), true).success.value
         navigator.nextPage(
-          UsePersonalDetailsAsSupplierPage,
+          UsePersonalDetailsAsSupplierPage(SupplierNumber(1)),
           NormalMode,
           ua,
           NovaUserType.VatRegisteredOrganisation
@@ -360,15 +350,9 @@ class NavigatorSpec extends SpecBase {
       }
 
       "must go from UsePersonalDetailsAsSupplierPage AVD-S1.0 to SupplierBusinessOrIndividual AVD-S2.0 when No is selected" in {
-        val ua = userAnswers
-          .set(UsePersonalDetailsAsSupplierPage, false)
-          .success
-          .value
-          .set(SupplierNumberPage, 2)
-          .success
-          .value
+        val ua = userAnswers.set(UsePersonalDetailsAsSupplierPage(SupplierNumber(2)), false).success.value
         navigator.nextPage(
-          UsePersonalDetailsAsSupplierPage,
+          UsePersonalDetailsAsSupplierPage(SupplierNumber(2)),
           NormalMode,
           ua,
           NovaUserType.VatRegisteredOrganisation
@@ -377,7 +361,7 @@ class NavigatorSpec extends SpecBase {
 
       "must go from UsePersonalDetailsAsSupplierPage AVD-S1.0 to JourneyRecovery when no answer is found" in {
         navigator.nextPage(
-          UsePersonalDetailsAsSupplierPage,
+          UsePersonalDetailsAsSupplierPage(SupplierNumber(1)),
           NormalMode,
           userAnswers,
           NovaUserType.VatRegisteredOrganisation
@@ -385,16 +369,10 @@ class NavigatorSpec extends SpecBase {
       }
 
       "must go from IsSupplierVatRegisteredPage AVD-S8.0 to CheckSupplierDetails AVD-S9 when No is selected" in {
-        val ua = userAnswers
-          .set(IsSupplierVatRegisteredPage, false)
-          .success
-          .value
-          .set(SupplierNumberPage, 2)
-          .success
-          .value
+        val ua = userAnswers.set(IsSupplierVatRegisteredPage(SupplierNumber(2)), false).success.value
         // TODO: navigate to AVD-S9a when implemented
         navigator.nextPage(
-          IsSupplierVatRegisteredPage,
+          IsSupplierVatRegisteredPage(SupplierNumber(2)),
           NormalMode,
           ua,
           NovaUserType.VatRegisteredOrganisation
@@ -402,16 +380,10 @@ class NavigatorSpec extends SpecBase {
       }
 
       "must go from IsSupplierVatRegisteredPage AVD-S8.0 to SupplierVatRegistrationDetails AVD-S8.1 when Yes is selected" in {
-        val ua = userAnswers
-          .set(IsSupplierVatRegisteredPage, true)
-          .success
-          .value
-          .set(SupplierNumberPage, 2)
-          .success
-          .value
+        val ua = userAnswers.set(IsSupplierVatRegisteredPage(SupplierNumber(2)), true).success.value
         // TODO: navigate to AVD-S8.1 when implemented
         navigator.nextPage(
-          IsSupplierVatRegisteredPage,
+          IsSupplierVatRegisteredPage(SupplierNumber(2)),
           NormalMode,
           ua,
           NovaUserType.VatRegisteredOrganisation
@@ -420,7 +392,7 @@ class NavigatorSpec extends SpecBase {
 
       "must go from IsSupplierVatRegisteredPage AVD-S8.0 to JourneyRecovery when no answer is found" in {
         navigator.nextPage(
-          IsSupplierVatRegisteredPage,
+          IsSupplierVatRegisteredPage(SupplierNumber(1)),
           NormalMode,
           userAnswers,
           NovaUserType.VatRegisteredOrganisation
@@ -438,59 +410,49 @@ class NavigatorSpec extends SpecBase {
 
       "must go from SupplierBusinessOrIndividualPage to the supplier business name page when Business is selected" in {
         val ua = userAnswers
-          .set(SupplierBusinessOrIndividualPage, BusinessOrPrivateIndividual.Business)
-          .success
-          .value
-          .set(SupplierNumberPage, 2)
+          .set(SupplierBusinessOrIndividualPage(SupplierNumber(2)), BusinessOrPrivateIndividual.Business)
           .success
           .value
         navigator.nextPage(
-          SupplierBusinessOrIndividualPage,
+          SupplierBusinessOrIndividualPage(SupplierNumber(2)),
           NormalMode,
           ua,
           NovaUserType.VatRegisteredOrganisation
         ) mustBe supplierdetails.routes.SupplierBusinessNameController.onPageLoad(SupplierNumber(2), NormalMode)
       }
 
-      "must go from SupplierBusinessOrIndividualPage to the supplier business name page for supplier 1 when no supplier number is in session" in {
-        val ua = userAnswers.set(SupplierBusinessOrIndividualPage, BusinessOrPrivateIndividual.Business).success.value
-        navigator.nextPage(
-          SupplierBusinessOrIndividualPage,
-          NormalMode,
-          ua,
-          NovaUserType.VatRegisteredOrganisation
-        ) mustBe supplierdetails.routes.SupplierBusinessNameController.onPageLoad(SupplierNumber(1), NormalMode)
-      }
-
       "must go from SupplierBusinessOrIndividualPage AVD-S2.0 to SupplierName AVD-S4.0 when PrivateIndividual is selected" in {
         val ua = userAnswers
-          .set(SupplierBusinessOrIndividualPage, BusinessOrPrivateIndividual.PrivateIndividual)
-          .success
-          .value
-          .set(SupplierNumberPage, 2)
+          .set(SupplierBusinessOrIndividualPage(SupplierNumber(2)), BusinessOrPrivateIndividual.PrivateIndividual)
           .success
           .value
         navigator.nextPage(
-          SupplierBusinessOrIndividualPage,
+          SupplierBusinessOrIndividualPage(SupplierNumber(2)),
           NormalMode,
           ua,
           NovaUserType.VatRegisteredOrganisation
         ) mustBe supplierdetails.routes.SupplierNameController.onPageLoad(SupplierNumber(2), NormalMode)
       }
 
-      "must go from SupplierBusinessOrIndividualPage AVD-S2.0 to SupplierName AVD-S4.0 for supplier 1 when no supplier number is in session" in {
-        val ua = userAnswers.set(SupplierBusinessOrIndividualPage, BusinessOrPrivateIndividual.PrivateIndividual).success.value
+      "must go from SupplierBusinessOrIndividualPage to the next page for the supplier it was answered for" in {
+        val ua = userAnswers
+          .set(SupplierBusinessOrIndividualPage(SupplierNumber(1)), BusinessOrPrivateIndividual.Business)
+          .success
+          .value
+          .set(SupplierBusinessOrIndividualPage(SupplierNumber(3)), BusinessOrPrivateIndividual.PrivateIndividual)
+          .success
+          .value
         navigator.nextPage(
-          SupplierBusinessOrIndividualPage,
+          SupplierBusinessOrIndividualPage(SupplierNumber(3)),
           NormalMode,
           ua,
           NovaUserType.VatRegisteredOrganisation
-        ) mustBe supplierdetails.routes.SupplierNameController.onPageLoad(SupplierNumber(1), NormalMode)
+        ) mustBe supplierdetails.routes.SupplierNameController.onPageLoad(SupplierNumber(3), NormalMode)
       }
 
-      "must go from SupplierNamePage AVD-S4.0 to LandingPage" in {
+      "must go from SupplierNamePage AVD-S4.0 to the supplier address page AVD-S5.0" in {
         navigator.nextPage(
-          SupplierNamePage,
+          SupplierNamePage(SupplierNumber(1)),
           NormalMode,
           userAnswers,
           NovaUserType.VatRegisteredOrganisation
@@ -499,26 +461,25 @@ class NavigatorSpec extends SpecBase {
 
       "must go from SupplierBusinessNamePage to the supplier address page" in {
         navigator.nextPage(
-          SupplierBusinessNamePage,
+          SupplierBusinessNamePage(SupplierNumber(1)),
           NormalMode,
           userAnswers,
           NovaUserType.VatRegisteredOrganisation
         ) mustBe supplieraddress.routes.IsSupplierAddressInTheUKController.onPageLoad(SupplierNumber(1), NormalMode)
       }
 
-      "must go from SupplierBusinessNamePage to the supplier address page for the supplier number in session" in {
-        val ua = userAnswers.set(SupplierNumberPage, 3).success.value
+      "must go from SupplierBusinessNamePage AVD-S3.0 to the supplier address page AVD-S5.0 for supplier 3" in {
         navigator.nextPage(
-          SupplierBusinessNamePage,
+          SupplierBusinessNamePage(SupplierNumber(3)),
           NormalMode,
-          ua,
+          userAnswers,
           NovaUserType.VatRegisteredOrganisation
         ) mustBe supplieraddress.routes.IsSupplierAddressInTheUKController.onPageLoad(SupplierNumber(3), NormalMode)
       }
 
       "must go from SupplierBusinessOrIndividualPage AVD-S2.0 to JourneyRecovery when no answer is found" in {
         navigator.nextPage(
-          SupplierBusinessOrIndividualPage,
+          SupplierBusinessOrIndividualPage(SupplierNumber(1)),
           NormalMode,
           userAnswers,
           NovaUserType.VatRegisteredOrganisation
@@ -642,7 +603,7 @@ class NavigatorSpec extends SpecBase {
       "must go from SupplierBusinessOrIndividualPage AVD-S2.0 to LandingPage" in {
         // TODO: navigate to AVD-S9.0 supplier-details CYA when implemented
         navigator.nextPage(
-          SupplierBusinessOrIndividualPage,
+          SupplierBusinessOrIndividualPage(SupplierNumber(1)),
           CheckMode,
           userAnswers,
           NovaUserType.VatRegisteredOrganisation
@@ -652,7 +613,7 @@ class NavigatorSpec extends SpecBase {
       "must go from SupplierNamePage AVD-S4.0 to LandingPage" in {
         // TODO: navigate to AVD-S9.0 supplier-details CYA when implemented
         navigator.nextPage(
-          SupplierNamePage,
+          SupplierNamePage(SupplierNumber(1)),
           CheckMode,
           userAnswers,
           NovaUserType.VatRegisteredOrganisation
@@ -661,7 +622,7 @@ class NavigatorSpec extends SpecBase {
 
       "must go from SupplierBusinessNamePage to the supplier details check your answers page" in {
         navigator.nextPage(
-          SupplierBusinessNamePage,
+          SupplierBusinessNamePage(SupplierNumber(1)),
           CheckMode,
           userAnswers,
           NovaUserType.VatRegisteredOrganisation
